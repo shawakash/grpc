@@ -17,14 +17,18 @@ const personProto = grpc.loadPackageDefinition(
 
 const PERSONS = [
   {
-    name: "harkirat",
+    name: "john",
     age: 45,
   },
   {
-    name: "raman",
+    name: "doe",
     age: 45,
   },
 ];
+
+export function sum(a: number, b: number) {
+  return a + b;
+}
 
 const handler: AddressBookServiceHandlers = {
   AddPerson: (call, callback) => {
