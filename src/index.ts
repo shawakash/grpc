@@ -1,5 +1,3 @@
-import protobuf from "protobufjs";
-import fs from "fs";
 import path from "path";
 import * as grpc from "@grpc/grpc-js";
 import { GrpcObject, ServiceClientConstructor } from "@grpc/grpc-js";
@@ -11,25 +9,39 @@ const packageDefinition = protoLoader.loadSync(
 
 const personProto = grpc.loadPackageDefinition(packageDefinition);
 
-protobuf
-  .load("message.proto")
-  .then((root) => {
-    const Person = root.lookupType("Person");
+const PERSONS = [
+  {
+    name: "harkirat",
+    age: 45,
+  },
+  {
+    name: "raman",
+    age: 45,
+  },
+];
 
-    let person = {
-      name: "John Doe",
-      age: 2,
-    };
+//@ts-ignore
+function addPerson(call, callback) {
+  // console.log(call);
+  let person = {
+    name: call.request.name,
+    age: call.request.age,
+  };
+  PERSONS.push(person);
+  console.log(PERSONS);
+  callback(null, person);
+}
 
-    let buffer = Person.encode(person).finish();
-    fs.writeFileSync("person.bin", buffer);
+const server = new grpc.Server();
 
-    console.log("Person serialized and saved to person.bin");
-
-    const data = fs.readFileSync("person.bin");
-
-    const deserializedPerson = Person.decode(data);
-
-    console.log("Person deserialized from person.bin:", deserializedPerson);
-  })
-  .catch(console.error);
+server.addService(
+  (personProto.AddressBookService as ServiceClientConstructor).service,
+  { addPerson },
+);
+server.bindAsync(
+  "0.0.0.0:50051",
+  grpc.ServerCredentials.createInsecure(),
+  (error, port) => {
+    console.log(`Server running at port: ${port}`);
+  },
+);
